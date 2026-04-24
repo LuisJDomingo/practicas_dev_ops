@@ -1,0 +1,26 @@
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches: [ main ] # Se activa cada vez que subes algo a main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Desplegar en Azure vía SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USERNAME }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            cd ~/practicas_dev_ops
+            git pull origin main
+            docker build -t app-nube .
+            docker stop mi-app-azure || true
+            docker rm mi-app-azure || true
+            docker run -d --name mi-app-azure -e NOMBRE="Luis Automatizado" app-nube
